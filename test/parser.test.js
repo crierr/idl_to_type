@@ -132,6 +132,26 @@ describe('SchemaParser', () => {
         );
     });
 
+    it('should convert nested schema contains array of nested schema', () => {
+        const type = schemaParser.parse(
+            `name: Foo\n` +
+            `output: foo.js\n\n` +
+            `schema:\n` +
+            `    nested:\n` +
+            `        -\n` +
+            `            bar: int\n` +
+            `            baz: str`
+        );
+        expect(type.render()).to.eql(
+            `interface Foo {\n` +
+            `    nested: {\n` +
+            `        bar: number;\n` +
+            `        baz: string;\n` +
+            `    }[];\n` +
+            `}\n`
+        );
+    });
+
     it('should convert array schema', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
