@@ -10,14 +10,16 @@ describe('CommentParser', () => {
             `foo: foo\n` +
             `#comment2\n` +
             `bar: bar\n`
-        )).to.eql({
-            foo: {
+        )).to.eql([
+            {
+                path: 'foo',
                 comments: ['comment1']
             },
-            bar: {
+            {
+                path: 'bar',
                 comments: ['comment2']
             }
-        });
+        ]);
     });
 
     it('should parse multiline comments', () => {
@@ -25,14 +27,12 @@ describe('CommentParser', () => {
             `#comment1\n` +
             `# comment2\n` +
             `foo: foo`
-        )).to.eql({
-            foo: {
-                comments: [
-                    'comment1',
-                    ' comment2'
-                ]
+        )).to.eql([
+            {
+                path: 'foo',
+                comments: ['comment1', ' comment2']
             }
-        });
+        ]);
     });
 
     it('should parse comments in nested object', () => {
@@ -41,49 +41,45 @@ describe('CommentParser', () => {
             `foo:\n` +
             `    #comment2\n` +
             `    bar: bar\n`
-        )).to.eql({
-            foo: {
-                comments: ['comment1'],
-                nodes: {
-                    bar: {
-                        comments: ['comment2']
-                    }
-                }
+        )).to.eql([
+            {
+                path: 'foo',
+                comments: ['comment1']
+            },
+            {
+                path: 'foo.bar',
+                comments: ['comment2']
             }
-        });
+        ]);
     });
 
     it('should handle inline comments', () => {
         expect(commentParser.parse(
             `foo: #comment1\n` +
             `    bar: 1 #comment2\n`
-        )).to.eql({
-            foo: {
-                comments: ['comment1'],
-                nodes: {
-                    bar: {
-                        comments: ['comment2']
-                    }
-                }
+        )).to.eql([
+            {
+                path: 'foo',
+                comments: ['comment1']
+            },
+            {
+                path: 'foo.bar',
+                comments: ['comment2']
             }
-        });
+        ]);
     });
 
-    xit('should parse comments in sequence', () => {
-        const expected = {
-            foo: {
-                comments: ['comment1'],
-                nodes: {
-                    0: {
-                        nodes: {
-                            bar: {
-                                comments: ['comment2']
-                            }
-                        }
-                    }
-                }
+    it('should parse comments in sequence', () => {
+        const expected = [
+            {
+                path: 'foo',
+                comments: ['comment1']
+            },
+            {
+                path: 'foo.bar',
+                comments: ['comment2']
             }
-        };
+        ];
         expect(commentParser.parse(
             `#comment1\n` +
             `foo:\n` +
@@ -98,45 +94,41 @@ describe('CommentParser', () => {
         )).to.eql(expected);
     });
 
-    xit('should handle object notation', () => {
+    it('should handle object notation', () => {
         expect(commentParser.parse(
             `#comment1\n` +
             `foo: {\n` +
             `    #comment2\n` +
             `    bar: 1,\n` +
             `}\n`
-        )).to.eql({
-            foo: {
-                comments: ['comment1'],
-                nodes: {
-                    bar: {
-                        comments: ['comment2']
-                    }
-                }
+        )).to.eql([
+            {
+                path: 'foo',
+                comments: ['comment1']
+            },
+            {
+                path: 'foo.bar',
+                comments: ['comment2']
             }
-        });
+        ]);
     });
 
-    xit('should parse comments in flow style sequence', () => {
+    it('should parse comments in flow style sequence', () => {
         expect(commentParser.parse(
             `#comment1\n` +
             `foo: [{\n` +
             `    #comment2\n` +
             `    bar: bar\n` +
             `}]\n`
-        )).to.eql({
-            foo: {
-                comments: ['comment1'],
-                nodes: {
-                    0: {
-                        nodes: {
-                            bar: {
-                                comments: ['comment2']
-                            }
-                        }
-                    }
-                }
+        )).to.eql([
+            {
+                path: 'foo',
+                comments: ['comment1']
+            },
+            {
+                path: 'foo.bar',
+                comments: ['comment2']
             }
-        });
+        ]);
     });
 });
