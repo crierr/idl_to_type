@@ -16,7 +16,7 @@ const globAsync = util.promisify(glob);
         .options({
             'input': {
                 alias: 'i',
-                describe: 'path to schema directory',
+                describe: 'path to schema directory or file',
                 demandOption: true,
             },
             'output': {
@@ -26,13 +26,18 @@ const globAsync = util.promisify(glob);
         })
         .argv;
 
-    const paths = await globAsync(path.resolve(argv.input, '**/*.sch'));
+    let paths = [];
+    if (path.extname(argv.input)) {
+        paths = [argv.input];
+    } else {
+        paths = await globAsync(path.resolve(argv.input, '**/*.sch'));
+    }
     const results = await Promise.all(paths.map(async path => {
         try {
             const schema = await readFile(path);
             return {
                 path,
-                type: schemaParser.parse(schema).render(1),
+                type: schemaParser.parse(schema.toString()).render(1),
             };
         } catch (e) {
             console.error(`path: ${path}`);
