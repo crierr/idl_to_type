@@ -6,8 +6,7 @@ const { schemaParser } = require('../lib/types');
 describe('SchemaParser', () => {
     it('should generate interface', () => {
         const type = schemaParser.parse(
-            `name: Foo\n` +
-            `output: foo.js`
+            `name: Foo\n`
         );
         console.log(type.render().slice(-1).charCodeAt(0));
         expect(type.render()).to.eql(
@@ -19,7 +18,6 @@ describe('SchemaParser', () => {
     it('should convert schema contains field', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    bar: int`
         );
@@ -33,7 +31,6 @@ describe('SchemaParser', () => {
     it('should convert schema contains other types', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    bar: str\n` +
             `    baz: float\n` +
@@ -57,7 +54,6 @@ describe('SchemaParser', () => {
     it('should convert schema contains custom type', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    bar: Bar`
         );
@@ -71,12 +67,12 @@ describe('SchemaParser', () => {
     it('should convert schema with default value specified', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    bar: int=0`
         );
         expect(type.render()).to.eql(
             `interface Foo {\n` +
+            `    /** @default 0 */\n` +
             `    bar: number;\n` +
             `}\n`
         );
@@ -85,7 +81,6 @@ describe('SchemaParser', () => {
     it('should convert schema contains array', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    bar: [str]`
         );
@@ -99,7 +94,6 @@ describe('SchemaParser', () => {
     it('should convert schema contains map', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    bar: [int, str]`
         );
@@ -113,7 +107,6 @@ describe('SchemaParser', () => {
     it('should convert nested schema', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    nested:\n` +
             `        bar: int\n` +
@@ -135,7 +128,6 @@ describe('SchemaParser', () => {
     it('should convert nested schema contains array of nested schema', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    nested:\n` +
             `        -\n` +
@@ -155,7 +147,6 @@ describe('SchemaParser', () => {
     it('should convert array schema', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema: [Bar]`
         );
         expect(type.render()).to.eql(
@@ -168,7 +159,6 @@ describe('SchemaParser', () => {
     it('should convert array schema which has complex element', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `schema:\n` +
             `    -\n` +
             `        foo: int\n` +
@@ -187,7 +177,6 @@ describe('SchemaParser', () => {
     it('should convert schema extends other schema', () => {
         const type = schemaParser.parse(
             `name: Foo\n` +
-            `output: foo.js\n\n` +
             `extends: Base\n\n` +
             `schema:\n` +
             `    bar: int`
@@ -198,4 +187,74 @@ describe('SchemaParser', () => {
             `}\n`
         );
     })
+
+    describe('when comments exist', () => {
+        it('should parse and render comments', () => {
+            expect(schemaParser.parse(
+                `name: Foo\n` +
+                `schema:\n` +
+                `    #bar comment\n` +
+                `    bar: int\n` +
+                `    #baz comment\n` +
+                `    baz: int\n` +
+                `    qux: int\n`
+            ).render()).to.eql(
+                `interface Foo {\n` +
+                `    /** bar comment */\n` +
+                `    bar: number;\n` +
+                `    /** baz comment */\n` +
+                `    baz: number;\n` +
+                `    qux: number;\n` +
+                `}\n`
+            );
+        });
+
+        it('should render multiline comment', () => {
+            expect(schemaParser.parse(
+                `name: Foo\n` +
+                `schema:\n` +
+                `    bar: int\n` +
+                `    #line1\n` +
+                `    #line2\n` +
+                `    #line3\n` +
+                `    baz: int\n` +
+                `    qux: int\n`
+            ).render()).to.eql(
+                `interface Foo {\n` +
+                `    bar: number;\n` +
+                `    /**\n` +
+                `     * line1\n` +
+                `     * line2\n` +
+                `     * line3\n` +
+                `     */\n` +
+                `    baz: number;\n` +
+                `    qux: number;\n` +
+                `}\n`
+            );
+        });
+
+        it('should render @summary, output, shard, index', () => {
+            expect(schemaParser.parse(
+                `name: Foo\n` +
+                `output: foo.js\n` +
+                `brief: some explanation\n` +
+                `schema:\n` +
+                `    bar: int\n` +
+                `shard:\n` +
+                `    - bar\n` +
+                `index:\n` +
+                `    - bar: 1\n`
+            ).render()).to.eql(
+                `/**\n` +
+                ` * @summary some explanation\n` +
+                ` * @see foo.js\n` +
+                ` * shard key: bar\n` +
+                ` * indexed by {"bar":1}\n` +
+                ` */\n` +
+                `interface Foo {\n` +
+                `    bar: number;\n` +
+                `}\n`
+            );
+        });
+    });
 });
