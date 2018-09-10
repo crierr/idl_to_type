@@ -1,8 +1,10 @@
 Generate .d.ts file from idl/*.sch files
 
 ### Installation
-`git clone https://github.com/crierr/idl_to_type.git`
-`npm link`
+```
+git clone https://github.com/crierr/idl_to_type.git
+npm link
+```
 
 ### Usage
 `sch2dts -i <directory_containing_idl_files> -o <path_to_d.ts>`
