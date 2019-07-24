@@ -3,6 +3,7 @@ Generate .d.ts file from idl/*.sch files
 ### Installation
 ```
 git clone https://github.com/crierr/idl_to_type.git
+cd idl_to_type
 npm link
 ```
 
