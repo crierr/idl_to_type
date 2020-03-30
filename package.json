@@ -1,6 +1,6 @@
 {
   "name": "sch2dts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "d.ts file generator for idl files",
   "main": "cli.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "glob": "^7.1.2",
     "js-yaml": "^3.13.1",
     "lodash": "^4.17.13",
-    "mocha": "^5.2.0",
+    "mocha": "^7.1.1",
     "yargs": "^12.0.1"
   },
   "bin": {
